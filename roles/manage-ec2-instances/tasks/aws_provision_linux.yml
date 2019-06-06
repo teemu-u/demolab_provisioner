@@ -1,0 +1,27 @@
+---
+- name: Linux Server | Launch instance(s)
+  ec2:
+    key_name: "{{ demolab_user }}-{{ name_prefix }}-key"
+    group:
+      - "{{ name_prefix }}-linuxsg"
+    instance_type: "{{ ec2_linux_instance_type }}"
+    exact_count: 1
+    count_tag:
+      Name: "{{ name_prefix + '-linux' + item }}"
+      App: AnsibleDemoLab
+    instance_tags:
+      Name: "{{ name_prefix + '-linux' + item }}"
+      App: AnsibleDemoLab
+      Username: "{{ demolab_user }}"
+      Demolab: "Provisioned through demolab provisioner"
+      short_name: "{{ 'linux' + item }}"
+    image: "{{ ec2_ami_ids[ec2_linux_instance_ami_type] }}"
+    wait: true
+    region: "{{ ec2_region }}"
+    vpc_subnet_id: "{{ ec2_vpc_subnet_id }}"
+    user_data: "{{ lookup('template', 'linux_ec2_user_data.j2', template_vars=dict(linux_hostname= name_prefix + '-linux' + item )) }}"
+    assign_public_ip: "yes"
+  with_sequence: count={{ linux_server_count }}
+  register: linux_jobs
+  async: 7200
+  poll: 0

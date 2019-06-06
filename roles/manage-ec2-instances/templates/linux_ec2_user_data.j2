@@ -1,6 +1,6 @@
 #cloud-config
-hostname: {{ name_prefix + 'tower' }}
-fqdn: {{ name_prefix + 'tower' }}.{{ dns_domain_name }}
+hostname: {{ linux_hostname }}
+fqdn: {{ linux_hostname }}.{{ dns_domain_name }}
 manage_etc_hosts: true
 chpasswd: { expire: False }
 ssh_pwauth: True

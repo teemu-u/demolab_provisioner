@@ -30,3 +30,11 @@
   retries: 300
   with_items: "{{ workstation_jobs.results }}"
   when: provision_windows and windows_workstation_count > 0
+
+- name: Linux | Wait for instance creation to complete
+  async_status: jid="{{ item.ansible_job_id }}"
+  register: linux_instances
+  until: linux_instances.finished
+  retries: 300
+  with_items: "{{ linux_jobs.results }}"
+  when: provision_linux

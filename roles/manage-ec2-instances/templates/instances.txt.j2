@@ -3,21 +3,38 @@
 ansible_port={{ ssh_port }}
 {% endif %}
 
+{% for group in groups %}
+{%   if "windows" in group %}
 [windows:vars]
 ansible_connection=psrp
 ansible_psrp_auth=credssp
 ansible_psrp_cert_validation=ignore
 ansible_psrp_operation_timeout=120
 ansible_psrp_read_timeout=150
+{%   endif %}
+{% endfor %}
 
+{% for group in groups %}
+{%   if "tower" in group %}
 [tower:vars]
 ansible_port=22
 ansible_ssh_user={{ root_user }}
 ansible_ssh_private_key_file="{{ playbook_dir }}/sshkeys/{{ demolab_user }}-{{ name_prefix }}-private.pem"
+{%   endif %}
+{% endfor %}
 
-[windows_domain_controllers]
+{% for group in groups %}
+{%   if "linux" in group %}
+[linux:vars]
+ansible_port=22
+ansible_ssh_user={{ root_user }}
+ansible_ssh_private_key_file="{{ playbook_dir }}/sshkeys/{{ demolab_user }}-{{ name_prefix }}-private.pem"
+{%   endif %}
+{% endfor %}
+
 {% for host in hostvars %}
 {%   if "windc" in host %}
+[windows_domain_controllers]
 {{ host|replace(name_prefix + "-", "") }} ansible_host={{ hostvars[host].ansible_host }} ansible_user={{ hostvars[host].ansible_user }} ansible_password="{{ hostvars[host].ansible_password }}" private_ip={{ hostvars[host].private_ip }}
 {%   endif %}
 {% endfor %}
@@ -28,6 +45,8 @@ ansible_ssh_private_key_file="{{ playbook_dir }}/sshkeys/{{ demolab_user }}-{{ n
 {%     if "windc" in host -%}
 {%     elif "tower" in host %}
 {{ host|replace(name_prefix + "-", "") }} ansible_host={{ hostvars[host].ansible_host }}
+{%     elif "linux" in host %}
+{{ host|replace(name_prefix + "-", "") }} ansible_host={{ hostvars[host].ansible_host }} private_ip={{ hostvars[host].private_ip }}
 {%     else %}
 {{ host|replace(name_prefix + "-", "") }} ansible_host={{ hostvars[host].ansible_host }} ansible_user={{ hostvars[host].ansible_user }} ansible_password="{{ hostvars[host].ansible_password }}"
 {%     endif %}

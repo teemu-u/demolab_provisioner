@@ -14,11 +14,15 @@
 - include_tasks: aws_provision_tower.yml
   when: provision_tower
 
+- include_tasks: aws_provision_linux.yml
+  when: provision_linux
+
 - include_tasks: aws_wait_instances.yml
 
 - include_tasks: aws_wait_connection.yml
 
 - include_tasks: aws_instance_passwords.yml
+  when: provision_windows
 
 - include_tasks: aws_create_inventory.yml
 

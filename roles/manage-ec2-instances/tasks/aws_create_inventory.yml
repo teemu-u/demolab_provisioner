@@ -9,8 +9,8 @@
     tower_license: "{{ tower_license }}"
     groups:
       - tower
-      - linux_servers
   with_items: "{{ tower_instances.results | map(attribute='tagged_instances') | list }}"
+  when: provision_tower
 
 - name: DomainController | Add new instance to host group
   add_host:
@@ -66,6 +66,21 @@
       - windows_workstations
   with_items: "{{ ec2workstation_password.results }}"
   when: ec2workstation_password is defined
+
+- debug:
+    msg: "{{ linux_instances.results }}"
+
+- name: Linux | Add new instance(s) to host group
+  add_host:
+    hostname: "{{ item.tags.Name }}"
+    ansible_user: "{{ root_user }}"
+    ansible_ssh_private_key_file: "{{ playbook_dir }}/sshkeys/{{ demolab_user }}-{{ name_prefix }}-private.pem"
+    ansible_host: "{{ item.public_ip }}"
+    private_ip: "{{ item.private_ip }}"
+    groups:
+      - linux
+  with_items: "{{ linux_instances.results | map(attribute='tagged_instances') | list }}"
+  when: provision_linux
 
 ################### Create Inventory ###################
 

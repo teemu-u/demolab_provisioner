@@ -38,3 +38,13 @@
     state: started
   with_items: "{{ workstation_instances.results | map(attribute='tagged_instances') | list }}"
   when: provision_windows and windows_workstation_count > 0
+
+- name: Linux | Wait for SSH to come up
+  wait_for:
+    host: "{{ item.public_ip }}"
+    port: 22
+    delay: 1
+    timeout: 320
+    state: started
+  with_items: "{{ linux_instances.results | map(attribute='tagged_instances') | list }}"
+  when: provision_linux
