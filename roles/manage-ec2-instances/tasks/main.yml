@@ -1,0 +1,8 @@
+---
+- include_tasks: teardown.yml
+  name: teardown provisioned things
+  when: teardown
+
+- include_tasks: provision.yml
+  name: Provision AWS things
+  when: not teardown

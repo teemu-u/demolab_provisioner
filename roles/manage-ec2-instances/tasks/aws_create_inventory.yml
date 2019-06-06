@@ -1,0 +1,75 @@
+---
+- name: Tower | Add new instance to host group
+  add_host:
+    hostname: "{{ name_prefix }}-tower"
+    ansible_user: "{{ root_user }}"
+    ansible_ssh_private_key_file: "{{ playbook_dir }}/sshkeys/{{ demolab_user }}-{{ name_prefix }}-private.pem"
+    ansible_host: "{{ item.public_ip }}"
+    private_ip: "{{ item.private_ip }}"
+    tower_license: "{{ tower_license }}"
+    groups:
+      - tower
+      - linux_servers
+  with_items: "{{ tower_instances.results | map(attribute='tagged_instances') | list }}"
+
+- name: DomainController | Add new instance to host group
+  add_host:
+    hostname: "windc"
+    ansible_host: "{{ item.item.public_ip }}"
+    ansible_port: 5986
+    ansible_user: "Administrator"
+    ansible_password: "{{ item.win_password }}"
+    ansible_connection: "psrp"
+    ansible_psrp_cert_validation: ignore
+    ansible_psrp_operation_timeout: 120
+    ansible_psrp_read_timeout: 150
+    private_ip: "{{ item.item.private_ip }}"
+    groups:
+      - windows_domain_controllers
+  with_items: "{{ ec2dc_password.results }}"
+  when: ec2dc_password is defined
+
+- name: Windows Server | Add new instance(s) to host group
+  add_host:
+    hostname: "{{ item.item.tags.Name }}"
+    ansible_host: "{{ item.item.public_ip }}"
+    private_ip: "{{ item.item.private_ip }}"
+    ansible_port: 5986
+    ansible_user: "Administrator"
+    ansible_password: "{{ item.win_password }}"
+    ansible_become_password: "{{ domain_admin_password }}"
+    ansible_connection: "psrp"
+    ansible_psrp_cert_validation: ignore
+    ansible_psrp_operation_timeout: 120
+    ansible_psrp_read_timeout: 150
+    groups:
+      - windows
+      - windows_servers
+  with_items: "{{ ec2windows_password.results }}"
+  when: ec2windows_password is defined
+
+- name: Windows Workstation | Add new instance(s) to host group
+  add_host:
+    hostname: "{{ item.item.tags.Name }}"
+    ansible_host: "{{ item.item.public_ip }}"
+    private_ip: "{{ item.item.private_ip }}"
+    ansible_port: 5986
+    ansible_user: "Administrator"
+    ansible_password: "{{ item.win_password }}"
+    ansible_become_password: "{{ users_password }}"
+    ansible_connection: "psrp"
+    ansible_psrp_cert_validation: ignore
+    ansible_psrp_operation_timeout: 120
+    ansible_psrp_read_timeout: 150
+    groups:
+      - windows
+      - windows_workstations
+  with_items: "{{ ec2workstation_password.results }}"
+  when: ec2workstation_password is defined
+
+################### Create Inventory ###################
+
+- name: Generate inventory
+  template:
+    src: instances.txt.j2
+    dest: "{{ playbook_dir }}/inventory"

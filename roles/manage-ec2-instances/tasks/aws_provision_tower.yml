@@ -1,0 +1,24 @@
+---
+- name: Create Tower Instance
+  ec2:
+    key_name: "{{ demolab_user }}-{{ name_prefix }}-key"
+    group: "{{ name_prefix }}-towersg"
+    instance_type: "{{ ec2_tower_instance_type }}"
+    exact_count: 1
+    count_tag:
+      Name: "{{ name_prefix + '-tower'}}"
+    instance_tags:
+      Name: "{{ name_prefix + '-tower'}}"
+      Username: "{{ demolab_user }}"
+      Demolab: "Provisioned through demolab provisioner"
+      short_name: "{{ name_prefix + '-tower' }}"
+    image: "{{ ec2_ami_ids[ec2_tower_instance_ami_type] }}"
+    wait: true
+    region: "{{ ec2_region }}"
+    vpc_subnet_id: "{{ ec2_vpc_subnet_id }}"
+    user_data: "{{ lookup('template', 'linux_ec2_user_data.j2') }}"
+    assign_public_ip: "yes"
+  with_sequence: count=1
+  register: tower_jobs
+  async: 7200
+  poll: 0

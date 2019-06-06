@@ -1,0 +1,25 @@
+---
+
+- include_tasks: aws_check_setup.yml
+
+- include_tasks: aws_find_ami_ids.yml
+
+- include_tasks: aws_create_vpc.yml
+
+- include_tasks: aws_create_sgs.yml
+
+- include_tasks: aws_provision_windows.yml
+  when: provision_windows
+
+- include_tasks: aws_provision_tower.yml
+  when: provision_tower
+
+- include_tasks: aws_wait_instances.yml
+
+- include_tasks: aws_wait_connection.yml
+
+- include_tasks: aws_instance_passwords.yml
+
+- include_tasks: aws_create_inventory.yml
+
+...

@@ -1,0 +1,81 @@
+---
+- name: DomainController | Launch instance
+  ec2:
+    key_name: "{{ demolab_user }}-{{ name_prefix }}-key"
+    group: "{{ name_prefix }}-windcsg"
+    instance_type: "{{ ec2_windc_instance_type }}"
+    exact_count: 1
+    count_tag:
+      Name: "{{ name_prefix }}-windc"
+      App: AnsibleDemoLab
+    instance_tags:
+      Name: "{{ name_prefix }}-windc"
+      App: AnsibleDemoLab
+      Username: "{{ demolab_user }}"
+      Demolab: "Provisioned through demolab provisioner"
+      short_name: 'windc'
+    image: "{{ ec2_ami_ids[ec2_windc_instance_ami_type] }}"
+    wait: true
+    region: "{{ ec2_region }}"
+    vpc_subnet_id: "{{ ec2_vpc_subnet_id }}"
+    user_data: "{{ lookup('template', 'win_ec2_user_data.j2', template_vars=dict(vm_name='windc')) }}"
+    assign_public_ip: "yes"
+  with_sequence: count=1
+  register: dc_jobs
+  async: 7200
+  poll: 0
+
+- name: Windows Server | Launch instance(s)
+  ec2:
+    key_name: "{{ demolab_user }}-{{ name_prefix }}-key"
+    group:
+      - "{{ name_prefix }}-windowssg"
+    instance_type: "{{ ec2_windows_instance_type }}"
+    exact_count: 1
+    count_tag:
+      Name: "{{ name_prefix + '-win' + item }}"
+      App: AnsibleDemoLab
+    instance_tags:
+      Name: "{{ name_prefix + '-win' + item }}"
+      App: AnsibleDemoLab
+      Username: "{{ demolab_user }}"
+      Demolab: "Provisioned through demolab provisioner"
+      short_name: "{{ 'win' + item }}"
+    image: "{{ ec2_ami_ids[ec2_windows_instance_ami_type] }}"
+    wait: true
+    region: "{{ ec2_region }}"
+    vpc_subnet_id: "{{ ec2_vpc_subnet_id }}"
+    user_data: "{{ lookup('template', 'win_ec2_user_data.j2', template_vars=dict(vm_name= name_prefix + '-win' + item )) }}"
+    assign_public_ip: "yes"
+  with_sequence: count={{ windows_server_count }}
+  register: windows_jobs
+  async: 7200
+  poll: 0
+
+- name: Windows Workstation | Launch instance(s)
+  ec2:
+    key_name: "{{ demolab_user }}-{{ name_prefix }}-key"
+    group:
+      - "{{ name_prefix }}-windowssg"
+    instance_type: "{{ ec2_windows_workstation_instance_type }}"
+    exact_count: 1
+    count_tag:
+      Name: "{{ name_prefix + '-work' + item }}"
+      App: AnsibleDemoLab
+    instance_tags:
+      Name: "{{ name_prefix + '-work' + item }}"
+      App: AnsibleDemoLab
+      Username: "{{ demolab_user }}"
+      Demolab: "Provisioned through demolab provisioner"
+      short_name: "{{ 'work' + item }}"
+    image: "{{ ec2_ami_ids[ec2_windows_workstation_instance_ami_type] }}"
+    wait: true
+    region: "{{ ec2_region }}"
+    vpc_subnet_id: "{{ ec2_vpc_subnet_id }}"
+    user_data: "{{ lookup('template', 'win_ec2_user_data.j2', template_vars=dict(vm_name= name_prefix + '-work' + item )) }}"
+    assign_public_ip: "yes"
+  with_sequence: count={{ windows_workstation_count }}
+  register: workstation_jobs
+  async: 7200
+  poll: 0
+  when: windows_workstation_count > 0

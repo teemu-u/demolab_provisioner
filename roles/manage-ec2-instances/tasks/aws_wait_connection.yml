@@ -1,0 +1,40 @@
+---
+- name: Tower | Wait for SSH to come up
+  wait_for:
+    host: "{{ item.public_ip }}"
+    port: 22
+    delay: 1
+    timeout: 320
+    state: started
+  with_items: "{{ tower_instances.results | map(attribute='tagged_instances') | list }}"
+  when: provision_tower
+
+- name: DomainController | Wait for WinRM to come up
+  wait_for:
+    host: "{{ item.public_ip }}"
+    port: 5986
+    delay: 1
+    timeout: 1800
+    state: started
+  with_items: "{{ dc_instances.results | map(attribute='tagged_instances') | list }}"
+  when: provision_windows
+
+- name: Windows Server(s) | Wait for WinRM to come up
+  wait_for:
+    host: "{{ item.public_ip }}"
+    port: 5986
+    delay: 1
+    timeout: 1800
+    state: started
+  with_items: "{{ windows_instances.results | map(attribute='tagged_instances') | list }}"
+  when: provision_windows
+
+- name: Windows Workstation(s) | Wait for WinRM to come up
+  wait_for:
+    host: "{{ item.public_ip }}"
+    port: 5986
+    delay: 1
+    timeout: 1800
+    state: started
+  with_items: "{{ workstation_instances.results | map(attribute='tagged_instances') | list }}"
+  when: provision_windows and windows_workstation_count > 0

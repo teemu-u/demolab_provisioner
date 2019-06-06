@@ -1,0 +1,52 @@
+[all:vars]
+{% if ssh_port is defined %}
+ansible_port={{ ssh_port }}
+{% endif %}
+
+[windows:vars]
+ansible_connection=psrp
+ansible_psrp_auth=credssp
+ansible_psrp_cert_validation=ignore
+ansible_psrp_operation_timeout=120
+ansible_psrp_read_timeout=150
+
+[tower:vars]
+ansible_port=22
+ansible_ssh_user={{ root_user }}
+ansible_ssh_private_key_file="{{ playbook_dir }}/sshkeys/{{ demolab_user }}-{{ name_prefix }}-private.pem"
+
+[windows_domain_controllers]
+{% for host in hostvars %}
+{%   if "windc" in host %}
+{{ host|replace(name_prefix + "-", "") }} ansible_host={{ hostvars[host].ansible_host }} ansible_user={{ hostvars[host].ansible_user }} ansible_password="{{ hostvars[host].ansible_password }}" private_ip={{ hostvars[host].private_ip }}
+{%   endif %}
+{% endfor %}
+
+[{{ name_prefix }}]
+{% for host in hostvars %}
+{%   if "-" in host -%}
+{%     if "windc" in host -%}
+{%     elif "tower" in host %}
+{{ host|replace(name_prefix + "-", "") }} ansible_host={{ hostvars[host].ansible_host }}
+{%     else %}
+{{ host|replace(name_prefix + "-", "") }} ansible_host={{ hostvars[host].ansible_host }} ansible_user={{ hostvars[host].ansible_user }} ansible_password="{{ hostvars[host].ansible_password }}"
+{%     endif %}
+{%   endif %}
+{% endfor %}
+
+{% for group in groups %}
+{%   if "windows_domain_controllers" in group -%}
+{%   else %}
+[{{ group }}]
+{%   endif %}
+{%   for entry in groups[group] %}
+{%     for host in hostvars %}
+{%       if entry == host and name_prefix in host %}
+{%         if "windc" in host -%}
+{%         else %}
+{{ host|replace(name_prefix + "-", "") }}
+{%         endif %}
+{%       endif %}
+{%     endfor %}
+{%   endfor %}
+{% endfor %}

@@ -1,0 +1,32 @@
+---
+- name: Tower | Wait for instance creation to complete
+  async_status: jid="{{ item.ansible_job_id }}"
+  register: tower_instances
+  until: tower_instances.finished
+  retries: 300
+  with_items: "{{ tower_jobs.results }}"
+  when: provision_tower
+
+- name: DomainController | Wait for instance creation to complete
+  async_status: jid="{{ item.ansible_job_id }}"
+  register: dc_instances
+  until: dc_instances.finished
+  retries: 300
+  with_items: "{{ dc_jobs.results }}"
+  when: provision_windows
+
+- name: Windows Server(s) | Wait for instance creation to complete
+  async_status: jid="{{ item.ansible_job_id }}"
+  register: windows_instances
+  until: windows_instances.finished
+  retries: 300
+  with_items: "{{ windows_jobs.results }}"
+  when: provision_windows
+
+- name: Windows Workstation(s) | Wait for instance creation to complete
+  async_status: jid="{{ item.ansible_job_id }}"
+  register: workstation_instances
+  until: workstation_instances.finished
+  retries: 300
+  with_items: "{{ workstation_jobs.results }}"
+  when: provision_windows and windows_workstation_count > 0
