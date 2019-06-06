@@ -19,7 +19,7 @@
       name: "{{ item }}"
       ignore_checksums: true
     with_items:
-      - googlechrome
+    - googlechrome
 
   - name: Create an shortcut to Tower site
     win_shortcut:
@@ -43,8 +43,8 @@
       name: ProgId
       data: ChromeHTML
     with_items:
-      - http
-      - https
+    - http
+    - https
 
   - name: Set Chrome to not ask about default browser
     win_regedit:
@@ -60,8 +60,8 @@
       data: 0
       type: dword
     with_items:
-      - PromotionalTabsEnabled
-      - WelcomePageOnOSUpgradeEnabled
+    - PromotionalTabsEnabled
+    - WelcomePageOnOSUpgradeEnabled
 
   - name: Disable Chrome Syncing
     win_regedit:
